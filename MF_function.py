@@ -544,3 +544,118 @@ def compare_modtran_spectra(wavelengths, alpha_grid, spectra_grid, alpha_list=No
     plt.legend()
     plt.grid(True)
     plt.show()
+
+
+# invalid mask check
+
+def make_valid_pixel_mask(
+    cube,
+    nodata_values=None,
+    require_positive=True,
+    min_valid_fraction=1.0
+):
+    H, W, B = cube.shape
+
+    finite = np.isfinite(cube)
+
+    valid_band = finite.copy()
+
+    if nodata_values is not None:
+        for v in nodata_values:
+            valid_band &= cube != v
+
+    if require_positive:
+        valid_band &= cube > 0
+
+    valid_fraction = np.mean(valid_band, axis=2)
+
+    valid_mask = valid_fraction >= min_valid_fraction
+
+    return valid_mask
+
+valid_mask = make_valid_pixel_mask(
+    cube,
+    nodata_values=[0, -9999],
+    require_positive=True,
+    min_valid_fraction=1.0
+)
+
+plt.figure(figsize=(5, 5))
+plt.imshow(valid_mask)
+plt.title("Valid pixel mask")
+plt.colorbar()
+plt.show()
+
+mod_sensor = gaussian_srf_resample(
+    mod_wave=mod_wave,
+    mod_spectra=mod_spectra,
+    sensor_wave=wavelengths,
+    fwhm_nm=12.5
+)
+uas_all, intercept = compute_uas_log_slope(
+    alpha_grid=alpha_grid,
+    spectra_grid=mod_sensor,
+    alpha_min=0.0,
+    alpha_max=2.5
+)
+
+plot_uas(wavelengths, uas_all, xlim=(2100, 2450))
+uas_low, _ = compute_uas_log_slope(
+    alpha_grid=alpha_grid,
+    spectra_grid=mod_sensor,
+    alpha_min=0.0,
+    alpha_max=0.5
+)
+
+plot_uas(wavelengths, uas_low, title="CH4 UAS from low-alpha range", xlim=(2100, 2450))
+cube_2300, wave_2300, mask_2300 = select_bands(
+    cube,
+    wavelengths,
+    wl_min=2100,
+    wl_max=2450
+)
+
+spectra_2300 = cube_to_spectra(cube_2300)
+
+uas_2300 = uas_all[mask_2300]
+
+mu_2300, cov_2300 = estimate_background_mean_cov(
+    spectra_2300,
+    mask=None,
+    reg=1e-6
+)
+
+# MF target
+target_2300 = make_methane_target(
+    mu=mu_2300,
+    uas=uas_2300,
+    positive_alpha=True
+)
+
+plot_uas(wave_2300, uas_2300, title="CH4 UAS 2100-2450 nm")
+plot_target(wave_2300, target_2300, title="MF target 2100-2450 nm")
+
+cube_2300, wave_2300, mask_2300 = select_bands(
+    cube,
+    wavelengths,
+    wl_min=2100,
+    wl_max=2450
+)
+
+uas_2300 = uas_low[mask_2300]
+
+# make valid mask for cube_2300
+valid_mask_2300 = make_valid_pixel_mask(
+    cube_2300,
+    nodata_values=[0, -9999],
+    require_positive=True,
+    min_valid_fraction=1.0
+)
+
+# apply matched filter to the cube and get alpha map, background mean and covariance
+alpha_map, mu_2300, cov_2300 = matched_filter_map_from_cube(
+    cube=cube_2300,
+    uas=uas_2300,
+    valid_mask=valid_mask_2300,
+    reg=1e-6
+)
