@@ -921,3 +921,11 @@ plt.title("Threshold history")
 plt.grid(True)
 plt.show()
 
+# show the final background mask from iterative MF
+plt.figure(figsize=(5, 5))
+plt.imshow(background_imf_mask)
+plt.title("Final background mask")
+plt.colorbar(label="Background")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.show()
