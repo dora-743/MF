@@ -119,8 +119,9 @@ Output:
     Final plume candidate mask P
 
     Final background mask B
+```
 
----
+
 
 ### Robust Thresholding
 
