@@ -2,65 +2,76 @@
 
 ### Overview
 
-Iterative Matched Filter (Iterative MF) is an extension of the standard Matched Filter used for methane plume detection from hyperspectral imagery.
+Iterative Matched Filter, or Iterative MF, is an extension of the standard Matched Filter used for methane plume detection from hyperspectral imagery.
 
-In a standard Matched Filter, the background mean spectrum and covariance matrix are estimated only once, and then the filter is applied to all pixels. However, if methane plume pixels are included in the background pixels, the background statistics can be contaminated by methane absorption features. This may reduce the sensitivity of the filter and lead to underestimation of methane enhancement.
+In a standard Matched Filter, the background mean spectrum and covariance matrix are estimated only once. The filter is then applied to all pixels using the fixed background statistics.
 
-To reduce this effect, Iterative MF repeatedly detects plume candidate pixels and excludes them from the background estimation in the next iteration.
+However, if methane plume pixels are included in the background pixels, the estimated background statistics can be contaminated by methane absorption features. As a result, methane absorption may be partially treated as background variation, which can reduce the detection sensitivity.
+
+Iterative MF addresses this problem by repeatedly detecting plume candidate pixels and excluding them from the background estimation in the next iteration.
 
 ---
 
 ### Standard Matched Filter
 
-For each pixel spectrum (x), the Matched Filter output (\hat{\alpha}) is computed as:
+For each pixel spectrum $x$, the Matched Filter output $\hat{\alpha}$ is computed as:
 
-[
+```math
 \hat{\alpha}
-============
-
+=
 \frac{(x-\mu)^T \Sigma^{-1} t}
 {t^T \Sigma^{-1} t}
-]
-
+```
 where:
 
-| Symbol         | Description                         |
-| -------------- | ----------------------------------- |
-| (x)            | observed pixel spectrum             |
-| (\mu)          | background mean spectrum            |
-| (\Sigma)       | background covariance matrix        |
-| (t)            | methane target spectrum             |
-| (\hat{\alpha}) | estimated methane enhancement score |
+| Symbol | Description |
+|---|---|
+| $x$ | observed pixel spectrum |
+| $\mu$ | background mean spectrum |
+| $\Sigma$ | background covariance matrix |
+| $t$ | methane target spectrum |
+| $\hat{\alpha}$ | methane enhancement score |
 
-A larger (\hat{\alpha}) indicates that the pixel spectrum is more similar to the methane absorption target.
+A larger value of $\hat{\alpha}$ indicates that the pixel spectrum is more similar to the methane absorption target.
 
 ---
 
 ### Methane Target Spectrum
 
-The methane absorption effect can be approximated as:
+The methane absorption effect is approximated as:
 
-[
+$$
 L \approx L_0 \exp(-\alpha s)
-]
+$$
 
-where (L_0) is the background radiance spectrum, (s) is the unit absorption spectrum, and (\alpha) is the methane enhancement amount.
+where:
 
-For small (\alpha), this can be linearized as:
+| Symbol | Description |
+|---|---|
+| $L$ | observed radiance spectrum after methane absorption |
+| $L_0$ | background radiance spectrum |
+| $\alpha$ | methane enhancement amount |
+| $s$ | unit absorption spectrum |
 
-[
+For small $\alpha$, this model can be linearized as:
+
+$$
 L \approx L_0 - \alpha L_0 s
-]
+$$
 
-Therefore, the methane target spectrum is defined as:
+Therefore, the methane-induced spectral change is approximately:
 
-[
+$$
+\Delta L \approx -\alpha L_0 s
+$$
+
+In this implementation, the background spectrum $L_0$ is approximated by the background mean spectrum $\mu$. Therefore, the methane target spectrum is defined as:
+
+$$
 t = -\mu s
-]
+$$
 
-where (\mu) is the current background mean spectrum and (s) is the unit absorption spectrum.
-
-In Iterative MF, (\mu) is updated at each iteration, so the target spectrum (t) is also updated.
+In Iterative MF, $\mu$ is updated at each iteration. Therefore, the target spectrum $t$ is also updated at each iteration.
 
 ---
 
@@ -81,43 +92,43 @@ Initialize:
 For k = 1, ..., K:
 
     1. Estimate background statistics
-       using pixels in Bk-1:
-           μk, Σk
+       using pixels in B(k-1):
+           mu_k, Sigma_k
 
     2. Construct methane target spectrum:
-           tk = - μk × s
+           t_k = - mu_k * s
 
     3. Apply Matched Filter to all valid pixels:
-           αk = MF(X; μk, Σk, tk)
+           alpha_k = MF(X; mu_k, Sigma_k, t_k)
 
     4. Detect plume candidate pixels
        using a robust threshold:
-           threshold = median(αk) + nσ × 1.4826 × MAD(αk)
+           threshold = median(alpha_k)
+                     + n_sigma * 1.4826 * MAD(alpha_k)
 
     5. Define plume candidate mask:
-           Pk = αk > threshold
+           P_k = alpha_k > threshold
 
     6. Update background mask:
-           Bk = M \ Pk
+           B_k = M excluding P_k
 
     7. Stop if the plume mask no longer changes.
 
 Output:
-    Final methane enhancement map α
+    Final methane enhancement map alpha
     Final plume candidate mask P
+
     Final background mask B
-```
 
 ---
 
 ### Robust Thresholding
 
-In this implementation, plume candidate pixels are extracted using a robust threshold based on the median and Median Absolute Deviation (MAD):
+Plume candidate pixels are extracted using a robust threshold based on the median and Median Absolute Deviation, MAD.
 
-[
+```math
 \mathrm{threshold}
-==================
-
+=
 \mathrm{median}(\alpha)
 +
 n_\sigma
@@ -125,38 +136,46 @@ n_\sigma
 1.4826
 \times
 \mathrm{MAD}(\alpha)
-]
+```
 
 where:
 
-[
+```math
 \mathrm{MAD}(\alpha)
-====================
-
+=
 \mathrm{median}
 \left(
 |\alpha - \mathrm{median}(\alpha)|
 \right)
-]
+```
 
-The factor (1.4826) converts MAD to a standard-deviation-like scale under the assumption of a normal distribution.
+The factor `1.4826` converts MAD to a standard-deviation-like scale under the assumption of a normal distribution.
 
 This robust threshold is used instead of the mean and standard deviation because the MF output may contain strong plume pixels or abnormal pixels. These outliers can strongly affect the mean and standard deviation, while the median and MAD are more robust.
+
+In this implementation, pixels satisfying the following condition are treated as plume candidates:
+
+```math
+\alpha > \mathrm{threshold}
+```
+
+These plume candidate pixels are excluded from the background estimation in the next iteration.
 
 ---
 
 ### Purpose of the Iteration
 
-The main purpose of the iteration is to reduce contamination of background statistics by plume pixels.
+The main purpose of the iteration is to reduce contamination of the background statistics by plume pixels.
 
-In the standard MF, methane plume pixels may be included when estimating (\mu) and (\Sigma). As a result, methane absorption features can be partially treated as background variation.
+In the standard MF, methane plume pixels may be included when estimating the background mean spectrum and covariance matrix. As a result, methane absorption features can be partially treated as background variation.
 
-Iterative MF reduces this problem by:
+Iterative MF reduces this problem by repeating the following steps:
 
 1. detecting high-score methane candidate pixels,
 2. excluding them from the background mask,
-3. re-estimating the background mean and covariance,
-4. re-applying the Matched Filter.
+3. re-estimating the background mean spectrum and covariance matrix,
+4. reconstructing the methane target spectrum,
+5. re-applying the Matched Filter.
 
 This process makes the background statistics less affected by methane plume pixels and can improve plume contrast in the final MF output.
 
@@ -168,14 +187,18 @@ Although Iterative MF can reduce plume contamination in the background statistic
 
 Examples of possible false positives include:
 
-* bad pixels,
-* bad columns,
-* striping noise,
-* isolated spectral spikes,
-* surface reflectance anomalies,
-* correction artifacts.
+- bad pixels,
+- bad columns,
+- striping noise,
+- isolated spectral spikes,
+- surface reflectance anomalies,
+- correction artifacts.
 
-Therefore, detected plume candidates should be checked using additional information such as spectral shape, spatial continuity, wind direction, and source location.
+Therefore, detected plume candidates should be checked using additional information such as:
+
+- spectral shape,
+- spatial continuity,
+- wind direction,
+- source location.
 
 In this study, suspicious line-like detections are further investigated by checking whether specific pixels show abnormal radiance at only one wavelength band compared with neighboring wavelength bands.
-
