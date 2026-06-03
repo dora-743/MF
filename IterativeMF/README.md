@@ -203,3 +203,32 @@ Therefore, detected plume candidates should be checked using additional informat
 - source location.
 
 In this study, suspicious line-like detections are further investigated by checking whether specific pixels show abnormal radiance at only one wavelength band compared with neighboring wavelength bands.
+
+## Improved Iterative MF with Diagonal Destriping
+
+`improved_iterative_mf_diagonal_destriping.py` provides an extended Iterative Matched Filter workflow that can apply directional destriping to MF alpha maps.
+
+The main use case is reducing line-like artifacts that appear along image diagonals such as `row - col = const`. The script supports several destriping timings:
+
+- `none`: run Iterative MF without destriping,
+- `final_only`: apply destriping only after the Iterative MF loop,
+- `each_iter`: apply destriping during every iteration before plume thresholding,
+- a list such as `[3, 4, 5]`: apply destriping only at selected iterations.
+
+The stripe offset for each diagonal can be estimated using:
+
+- `median`,
+- `mean`,
+- `trimmed_mean`,
+- `mode`.
+
+A typical command is:
+
+```bash
+python IterativeMF/improved_iterative_mf_diagonal_destriping.py \
+  --roi-csv all_roi_spectra200x200.csv \
+  --modtran-csv CH4c.csv \
+  --output-dir outputs_improved_diagonal_destripe
+```
+
+The script saves experiment summaries, selected wavelength arrays, selected UAS arrays, alpha maps, corrected alpha maps, stripe maps, plume masks, and per-pixel CSV outputs.
