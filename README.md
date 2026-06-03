@@ -40,11 +40,11 @@ where:
 
 | Symbol         | Meaning                      |
 | -------------- | ---------------------------- |
-| (x)            | observed pixel spectrum      |
-| (\mu)          | background mean spectrum     |
-| (\Sigma)       | background covariance matrix |
-| (t)            | methane target spectrum      |
-| (\hat{\alpha}) | methane enhancement score    |
+| $(x)$            | observed pixel spectrum      |
+| $(\mu)$          | background mean spectrum     |
+| $(\Sigma)$       | background covariance matrix |
+| $(t)$            | methane target spectrum      |
+| $(\hat{\alpha})$ | methane enhancement score    |
 
 A larger value of (\hat{\alpha}) means that the pixel spectrum is more similar to the methane absorption target.
 
@@ -62,10 +62,10 @@ where:
 
 | Symbol   | Meaning                                    |
 | -------- | ------------------------------------------ |
-| (L)      | observed radiance after methane absorption |
-| (L_0)    | background radiance                        |
-| (\alpha) | methane enhancement amount                 |
-| (s)      | unit absorption spectrum                   |
+| $(L)$      | observed radiance after methane absorption |
+| $(L_0)$    | background radiance                        |
+| $(\alpha)$ | methane enhancement amount                 |
+| $(s)$      | unit absorption spectrum                   |
 
 For small methane enhancement, this can be linearized as:
 
