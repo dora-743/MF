@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import re
 from pathlib import Path
 from typing import Optional, Sequence, Tuple
@@ -13,9 +14,7 @@ except Exception:
     display = print
 
 
-# ============================================================
 # CONFIG
-# ============================================================
 
 CSV_PATH = r"D:\research\code\all_roi_spectra200x200.csv"
 OUT_DIR = r"D:\research\code\diagonal_spike_check"
@@ -57,8 +56,8 @@ REQUIRE_POSITIVE = True
 
 # Loading and cube construction
 
+# find columns like wave_2300.00nm and extract wavelengths, sorted by wavelength
 def get_wave_columns(df: pd.DataFrame) -> tuple[list[str], np.ndarray]:
-    """Find columns like wave_2300.00nm and return them sorted by wavelength."""
     wave_cols: list[str] = []
     wavelengths: list[float] = []
     pattern = re.compile(r"^wave_([0-9]+(?:\.[0-9]+)?)nm$")
@@ -118,13 +117,13 @@ def spectra_to_cube(
     return cube, ys, xs
 
 
+# create a boolean mask for selected wavelength bands, with optional min/max and exclusion ranges
 def band_mask(
     wavelengths: np.ndarray,
     wl_min: Optional[float] = None,
     wl_max: Optional[float] = None,
     exclude_ranges: Optional[Sequence[Tuple[float, float]]] = None,
 ) -> np.ndarray:
-    """Create wavelength selection mask."""
     mask = np.ones_like(wavelengths, dtype=bool)
     if wl_min is not None:
         mask &= wavelengths >= wl_min
@@ -136,8 +135,8 @@ def band_mask(
     return mask
 
 
+# valid if all bands are finite (and optionally positive) at that pixel
 def make_valid_mask(cube: np.ndarray, require_positive: bool = True) -> np.ndarray:
-    """Valid if all selected-band values are finite and optionally positive."""
     valid = np.all(np.isfinite(cube), axis=2)
     if require_positive:
         valid &= np.all(cube > 0, axis=2)
@@ -146,15 +145,13 @@ def make_valid_mask(cube: np.ndarray, require_positive: bool = True) -> np.ndarr
 
 # Spectral one-band spike score
 
+
+# robust z-score by band, ignoring invalid pixels. Returns z, median, and scale arrays of shape (B,).
 def robust_z_by_band(
     values: np.ndarray,
     valid3: np.ndarray,
     eps: float = 1e-12,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Robust z-score for values[H, W, B] independently for each band.
-    z = (value - median_band) / (1.4826 * MAD_band)
-    """
     masked = np.where(valid3, values, np.nan)
     med = np.nanmedian(masked, axis=(0, 1))
     mad = np.nanmedian(np.abs(masked - med[None, None, :]), axis=(0, 1))
@@ -219,6 +216,7 @@ def compute_spectral_spike_cube(
 
 # Diagonal line aggregation
 
+# create maps of diagonal id and y-x coordinate for each pixel, based on the specified mode
 def make_diagonal_id_map(
     H: int,
     W: int,
@@ -226,17 +224,6 @@ def make_diagonal_id_map(
     xs: np.ndarray,
     mode: str = "row_col",
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Create diagonal ids for y=x-parallel lines.
-
-    row_col mode:
-        diag_id = row - col
-        robust if the image grid is regular.
-
-    coord mode:
-        diag_id = y - x
-        matches raw coordinate equation directly if y and x have the same spacing.
-    """
     rr, cc = np.indices((H, W))
 
     if mode == "row_col":
@@ -250,14 +237,11 @@ def make_diagonal_id_map(
     return diag_id, y_minus_x
 
 
+# for each diag_id, keep only the strongest line candidate within +/- band_separation bands
 def collapse_adjacent_band_candidates(
     df_lines: pd.DataFrame,
     band_separation: int = 2,
 ) -> pd.DataFrame:
-    """
-    For each diagonal, keep only the strongest candidates that are separated
-    by more than band_separation in center-band index.
-    """
     if len(df_lines) == 0:
         return df_lines
 
@@ -494,6 +478,7 @@ def plot_detected_overlay(
     print(f"Saved: {out_png}")
 
 
+# plot example spectra for detected pixels, with vertical line at detected wavelength. Save each plot as PNG in the output directory.
 def plot_line_spectrum_examples(
     cube: np.ndarray,
     wavelengths: np.ndarray,
@@ -501,7 +486,6 @@ def plot_line_spectrum_examples(
     out_dir: str | Path,
     max_examples: int = 10,
 ) -> None:
-    """Plot spectra for the strongest detected pixels."""
     if len(df_pixels) == 0:
         print("No detected pixels to plot.")
         return
@@ -650,11 +634,20 @@ def run_detector(
     }
 
 
-result = run_detector(
-    csv_path=CSV_PATH,
-    out_dir=OUT_DIR,
-)
+# create command-line interface for running the detector on a specified CSV and output directory
+def build_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Detect diagonal one-band spike artifacts.")
+    parser.add_argument("--csv", default=str(CSV_PATH), help="Input ROI spectra CSV path.")
+    parser.add_argument("--out-dir", default=str(OUT_DIR), help="Output directory.")
+    return parser
 
-display(result["df_lines"].head(30))
-display(result["df_pixels"].head(30))
 
+def main() -> None:
+    args = build_arg_parser().parse_args()
+    result = run_detector(csv_path=args.csv, out_dir=args.out_dir)
+    print(result["df_lines"].head(30))
+    print(result["df_pixels"].head(30))
+
+
+if __name__ == "__main__":
+    main()
