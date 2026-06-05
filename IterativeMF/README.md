@@ -206,7 +206,7 @@ In this study, suspicious line-like detections are further investigated by check
 
 ## Improved Iterative MF with Diagonal Destriping
 
-`improved_iterative_mf_diagonal_destriping.py` provides an extended Iterative Matched Filter workflow that can apply directional destriping to MF alpha maps.
+`IterativeMF_diagonal_destriping.py` provides an extended Iterative Matched Filter workflow that can apply directional destriping to MF alpha maps.
 
 The main use case is reducing line-like artifacts that appear along image diagonals such as `row - col = const`. The script supports several destriping timings:
 
@@ -225,7 +225,7 @@ The stripe offset for each diagonal can be estimated using:
 A typical command is:
 
 ```bash
-python IterativeMF/improved_iterative_mf_diagonal_destriping.py \
+python IterativeMF/IterativeMF_diagonal_destriping.py \
   --roi-csv all_roi_spectra200x200.csv \
   --modtran-csv CH4c.csv \
   --output-dir outputs_improved_diagonal_destripe
@@ -235,7 +235,7 @@ The script saves experiment summaries, selected wavelength arrays, selected UAS 
 
 ## Improved Iterative MF with two-direction diagonal destriping
 
-`improved_iterative_mf_two_direction_destriping.py` is an additional version of the improved Iterative Matched Filter workflow.
+`IterativeMF_two_direction_destriping.py` is an additional version of the improved Iterative Matched Filter workflow.
 The original one-direction destriping file is kept unchanged. This two-direction version estimates and subtracts stripe-like offsets in two line directions:
 
 - `y_minus_x`: lines parallel to `y=x`, represented by `row - col = const`
@@ -252,7 +252,7 @@ This means the script first corrects `y=x`-parallel stripes and then corrects `y
 Typical execution:
 
 ```bash
-python IterativeMF/improved_iterative_mf_two_direction_destriping.py   --roi-csv all_roi_spectra200x200.csv   --modtran-csv CH4c.csv   --output-dir outputs_two_direction_diagonal_destripe
+python IterativeMF/IterativeMF_two_direction_destriping.py   --roi-csv all_roi_spectra200x200.csv   --modtran-csv CH4c.csv   --output-dir outputs_two_direction_diagonal_destripe
 ```
 
 Useful options:
@@ -276,7 +276,7 @@ Because two-direction destriping is stronger than one-direction destriping, alwa
 If the correction looks too strong, prefer `final_only` first, or reduce the aggressiveness by changing `exclude_mode`, `smooth_half_window`, or the selected experiment set.
 ### Two-Direction Destriping Statistic Comparison
 
-`improved_iterative_mf_two_direction_destriping_stat_compare.py` is an extended
+`IterativeMF_destrping_stat_compare.py` is an extended
 version of the two-direction diagonal destriping workflow.
 
 It keeps the original two-direction correction idea, but compares several line
@@ -307,7 +307,7 @@ The default two-direction order is:
 Example:
 
 ```bash
-python IterativeMF/improved_iterative_mf_two_direction_destriping_stat_compare.py \
+python IterativeMF/IterativeMF_destrping_stat_compare.py \
   --roi-csv all_roi_spectra200x200.csv \
   --modtran-csv CH4c.csv \
   --output-dir outputs_two_direction_diagonal_destripe_stat_compare
@@ -316,7 +316,7 @@ python IterativeMF/improved_iterative_mf_two_direction_destriping_stat_compare.p
 To show notebook-style diagnostic figures:
 
 ```bash
-python IterativeMF/improved_iterative_mf_two_direction_destriping_stat_compare.py \
+python IterativeMF/IterativeMF_destrping_stat_compare.py\
   --roi-csv all_roi_spectra200x200.csv \
   --modtran-csv CH4c.csv \
   --output-dir outputs_two_direction_diagonal_destripe_stat_compare \
