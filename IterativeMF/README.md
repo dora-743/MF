@@ -232,3 +232,45 @@ python IterativeMF/improved_iterative_mf_diagonal_destriping.py \
 ```
 
 The script saves experiment summaries, selected wavelength arrays, selected UAS arrays, alpha maps, corrected alpha maps, stripe maps, plume masks, and per-pixel CSV outputs.
+
+## Improved Iterative MF with two-direction diagonal destriping
+
+`improved_iterative_mf_two_direction_destriping.py` is an additional version of the improved Iterative Matched Filter workflow.
+The original one-direction destriping file is kept unchanged. This two-direction version estimates and subtracts stripe-like offsets in two line directions:
+
+- `y_minus_x`: lines parallel to `y=x`, represented by `row - col = const`
+- `y_plus_x`: lines parallel to `y=-x`, represented by `row + col = const`
+
+The default direction order is:
+
+```python
+["y_minus_x", "y_plus_x"]
+```
+
+This means the script first corrects `y=x`-parallel stripes and then corrects `y=-x`-parallel stripes on the already corrected alpha map.
+
+Typical execution:
+
+```bash
+python IterativeMF/improved_iterative_mf_two_direction_destriping.py   --roi-csv all_roi_spectra200x200.csv   --modtran-csv CH4c.csv   --output-dir outputs_two_direction_diagonal_destripe
+```
+
+Useful options:
+
+```bash
+# Run only the baseline and the main two-direction final-only case
+python IterativeMF/improved_iterative_mf_two_direction_destriping.py   --experiments baseline_no_destripe,median_yx_then_ynegx_final_only
+
+# Show diagnostic plots
+python IterativeMF/improved_iterative_mf_two_direction_destriping.py   --show-plots
+```
+
+Because two-direction destriping is stronger than one-direction destriping, always compare:
+
+- the raw alpha map,
+- the total stripe map,
+- each direction-wise stripe map,
+- the corrected alpha map,
+- the plume candidate mask.
+
+If the correction looks too strong, prefer `final_only` first, or reduce the aggressiveness by changing `exclude_mode`, `smooth_half_window`, or the selected experiment set.
