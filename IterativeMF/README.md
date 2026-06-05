@@ -274,3 +274,66 @@ Because two-direction destriping is stronger than one-direction destriping, alwa
 - the plume candidate mask.
 
 If the correction looks too strong, prefer `final_only` first, or reduce the aggressiveness by changing `exclude_mode`, `smooth_half_window`, or the selected experiment set.
+### Two-Direction Destriping Statistic Comparison
+
+`improved_iterative_mf_two_direction_destriping_stat_compare.py` is an extended
+version of the two-direction diagonal destriping workflow.
+
+It keeps the original two-direction correction idea, but compares several line
+statistics for estimating stripe offsets:
+
+- `median`
+- `mean`
+- `trimmed_mean`
+- `mode`
+- `sigma_clipped_mean`
+
+The script runs each statistic in both modes:
+
+- `final_only`: apply destriping only to the final Iterative MF alpha map.
+- `each_iter`: apply destriping before plume thresholding at every iteration.
+
+It also keeps reference cases:
+
+- `baseline_no_destripe`
+- `median_yx_final_only`
+- `median_yx_each_iter`
+
+The default two-direction order is:
+
+1. `y_minus_x`, which corresponds to `row - col = const`.
+2. `y_plus_x`, which corresponds to `row + col = const`.
+
+Example:
+
+```bash
+python IterativeMF/improved_iterative_mf_two_direction_destriping_stat_compare.py \
+  --roi-csv all_roi_spectra200x200.csv \
+  --modtran-csv CH4c.csv \
+  --output-dir outputs_two_direction_diagonal_destripe_stat_compare
+```
+
+To show notebook-style diagnostic figures:
+
+```bash
+python IterativeMF/improved_iterative_mf_two_direction_destriping_stat_compare.py \
+  --roi-csv all_roi_spectra200x200.csv \
+  --modtran-csv CH4c.csv \
+  --output-dir outputs_two_direction_diagonal_destripe_stat_compare \
+  --show-plots
+```
+
+The script saves `stat_compare_summary.csv` and per-case outputs such as:
+
+- raw alpha map,
+- corrected alpha map,
+- total stripe map,
+- direction-wise stripe maps,
+- plume mask,
+- pixel-wise CSV table,
+- line-wise stripe offset table.
+
+This version is useful when deciding which stripe-offset statistic is most stable
+for a given scene. Inspect the raw alpha, corrected alpha, total stripe map,
+direction-wise stripe maps, and plume mask together before choosing a final
+configuration.
