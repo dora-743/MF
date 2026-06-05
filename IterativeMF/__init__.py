@@ -1,3 +1,1 @@
-"""Plain Python utilities for methane Matched Filter workflows."""
-
-from .Iterative_MF import *
+from . import improved_iterative_mf_diagonal_destriping
