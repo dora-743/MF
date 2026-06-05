@@ -1,1 +1,1 @@
-from . import improved_iterative_mf_diagonal_destriping
+from .Iterative_MF import *
