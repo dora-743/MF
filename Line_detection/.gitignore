@@ -1,0 +1,13 @@
+outputs*/
+*_output*/
+*.npy
+*.npz
+*.png
+*.csv
+
+!example*.csv
+!sample*.csv
+
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
