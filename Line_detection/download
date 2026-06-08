@@ -1,0 +1,16 @@
+# Generated outputs
+outputs*/
+*_output*/
+*.npy
+*.npz
+*.png
+*.csv
+
+# Keep source CSV examples only if intentionally added
+!example*.csv
+!sample*.csv
+
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
