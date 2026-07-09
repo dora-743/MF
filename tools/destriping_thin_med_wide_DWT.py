@@ -89,7 +89,7 @@ def haar_decompose2d(image: np.ndarray, levels: int) -> tuple[np.ndarray, list[t
         current = approx
     return current, details
 
-
+# wavelet transformation
 def haar_reconstruct2d(
     approx: np.ndarray,
     details: list[tuple[np.ndarray, np.ndarray, np.ndarray]],
@@ -142,7 +142,7 @@ def soft_threshold(coeff: np.ndarray, threshold: float) -> np.ndarray:
         return coeff.copy()
     return np.sign(coeff) * np.maximum(np.abs(coeff) - threshold, 0.0)
 
-
+#rotate 
 def choose_rotation_angle(image: np.ndarray, slope: float, canvas_size: int = 512) -> tuple[float, dict[str, float]]:
     padded, _ = central_reflect_pad(image, canvas_size)
     theta = math.degrees(math.atan(slope))
@@ -161,7 +161,7 @@ def choose_rotation_angle(image: np.ndarray, slope: float, canvas_size: int = 51
             best_angle = angle
     return best_angle, scores
 
-
+# reduce only horizonal component
 def wavelet_horizontal_destripe(
     image: np.ndarray,
     protected_mask: np.ndarray,
