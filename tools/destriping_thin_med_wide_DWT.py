@@ -9,14 +9,14 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
+import cupy as np
 from scipy import ndimage
 
 
 DEFAULT_INPUT_DIR = Path(
-    r"D:\research\code\outputs_detected_slopes_orthogonal_thin_eachiter_then_broad_median"
+    r'https://github.com/dora-743/hokanko/blob/main/all_roi_spectra.csv'
 )
-DEFAULT_OUTPUT_DIR = Path(r"D:\research\code\takaku_wavelet_mf_destriping\outputs")
+DEFAULT_OUTPUT_DIR = Path(r"https://github.com/dora-743/hokanko/blob/main/all_roi_spectra.csv")
 
 THIN_SLOPE = 0.9792723507257799 # can find by QA data
 BROAD_SLOPE = 1.257172298918948 # detect_wide_slope.py
