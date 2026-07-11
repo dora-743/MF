@@ -110,4 +110,32 @@ def main() -> None:
     for input_path in input_files:
         output_path = OUT_DIR / input_path.name
 
-        if o
+        if output_path in used_output_paths:
+            failed += 1
+            print(
+                f"[FAIL]{inpout_path}: duplicate filename {input_path.name!r}; "
+                "another input file aalready uses the same output path"
+            )
+            continue
+        
+        used_output_paths.add(output_path)
+
+        try:
+            normalized = read_two_columns(imput_path)
+            normalized.to_csv(outuput_path, index=False)
+            succeeded += 1
+            print(
+                f"[OK]{input_path.name} -> {output_path}"
+                f"rows={len(normalized)}"
+            )
+        except Exception as error:
+            failed += 1
+            print(f"[FAIL]{imput_path}: {error}")
+        
+    print(
+        f"[DONE] normalized files:{succeeded},"
+        f"failed: {failed}, out_dir: {OUT_DIR}"
+    )
+
+if __name__ == "__main__":
+    main()
