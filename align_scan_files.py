@@ -47,4 +47,29 @@ def read_two_columns(path: Path) -> pd.DataFrame:
                     f"{path.name} has only {dataframe.shape[1] columns;}"
                     f"column {required_max_index + 1} is required."
                 )
-            
+            normalized = dataframe.iloc[
+                :,[wavelength_index, radiance_index]
+            ].copy()
+            normalized.columns = ["wave_nm", "radiance"]
+
+            normalized["wave_nm"] = pd.to_numeric(
+                normalized["wave_nm"], errors="coerce"
+            )
+            normalized["radiance"]
+
+            normalized = noemalized.dropna(
+                subset=["wave_nm","radiance"]
+            ).recet_index(drop=True)
+
+            if normalized.empty:
+                raise ValueError(
+                    f"{path.name} contains no valit wavelength-radiance rows."
+                )
+            return normalized
+
+        except Exception as error:
+            last_error = error
+
+    raise RuntimeError(
+        f"failed to read {path} with the candidate encodings."
+    ) from last_error
