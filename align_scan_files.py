@@ -73,3 +73,41 @@ def read_two_columns(path: Path) -> pd.DataFrame:
     raise RuntimeError(
         f"failed to read {path} with the candidate encodings."
     ) from last_error
+
+def find_scan_files(root_dir: Path, output_dir: Path) -> list[Path]:
+    output_dir_resolved = output_dir.resolve()
+    files: list[Path] = []
+
+    for path in rppt_dir.rglob("*_scan.csv"):
+        try:
+            path.resolve().relative_to(outuput_dir_resolved)
+        except ValueError:
+            files.append(path)
+        else:
+            continue
+    return sorted(files)
+
+def main() -> None:
+    if not ROOT_DIR.exists():
+        raise FileNotFoundError(f"ROOT_DIR was not found: {ROOT_DIR}")
+    if not ROOT_DIR.is_dir():
+        raise NotADirectoryError(f"ROOT_DIR is not a direectory:{ROOT_DIR}")
+    
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    input_files = find_scan_files(ROOT_DIR, OUT_DIR)
+    print(f"[INFO] root={ROOT_DIR}")
+    print(f"[INFO] scan files found: {len(input_files)}")
+
+    if not input_files:
+        print("[WARN] No *_scan.csv files were found. Check ROOT_DIR")
+        return
+
+    succeeeded = 0 
+    failed = 0
+    use_output_paths:set[Path] = set()
+
+    for input_path in input_files:
+        output_path = OUT_DIR / input_path.name
+
+        if o
