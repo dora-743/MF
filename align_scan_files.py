@@ -17,7 +17,7 @@ ENCODINGS = ("utf-8-sig","cp932","utf-8","latin-1")
 def supports_on_bad_lines() -> bool:
     return "on_bad_lines" in inspect.signature(pd.read_csv).parameters
 
-def read_two_columns(path: Path) -> pd.DataFrame:
+def read_two_columns(path: Path) -> pd.DataFrame: # read wavelengths and radiance columns from one scan csv.
     skiprows = START_ROW_EXCEL - 1
     wavelength_index = WAVEL_COL_EXCEL - 1
     radiance_index = RADIANCE_COL_EXCEL -1
@@ -31,7 +31,7 @@ def read_two_columns(path: Path) -> pd.DataFrame:
                 "skiprows":skiprows,
                 "encoding":endcoding,
                 "engine":"python,
-                "sep":None,
+                "sep":None, # automatically ditect comma, tab, semicolon
             }
             
             if supports_on_bad_lines():
@@ -57,7 +57,8 @@ def read_two_columns(path: Path) -> pd.DataFrame:
             )
             normalized["radiance"]
 
-            normalized = noemalized.dropna(
+            # remove rows that cannt bbe used as wavelength-radiance pairs.
+            normalized = noemalized.dropna( 
                 subset=["wave_nm","radiance"]
             ).recet_index(drop=True)
 
