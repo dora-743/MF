@@ -48,5 +48,16 @@ def replace_profile_values(
     for item in profile:
         try:
             numeric_value = float(item)
+        except (TypeError, ValueError):
+            replaced.append(item)
+            all_reference_value = False
+            continue
+        
+        if abs (numeric_value - REFERENCE_PROFILE_VALUE) < VALUE_TOLELANCE:
+            replaced.append(new_value)
+            changed_count += 1
+            else:
+                replaced.append(item)
+                all_reference_value = False
 
 
